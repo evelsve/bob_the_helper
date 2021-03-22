@@ -30,7 +30,7 @@ function LOG(str) {
   //console.log("" + str);
 }
 
-import * as SRGS from './srgs'
+import * as SRGS from './reader'
 
 //////////////////////////////////////////////////////////////////////
 // we need to be able to clone objects between different edges
