@@ -7,7 +7,7 @@ interface SDSContext {
     nluData: any;
     ttsAgenda: string;
     approval:  boolean,
-    intentResult: any;
+    // intentResult: any;
     query: string,
     snippet: string,
     option: string,
@@ -16,8 +16,8 @@ interface SDSContext {
     idea: string,
     url: string,
     game: string,
-    count: number,
-
+    bye: number,
+    finished: boolean
 }
 
 type SDSEvent =
@@ -26,8 +26,6 @@ type SDSEvent =
     | { type: 'ASRRESULT', value: string }
     | { type: 'ENDSPEECH' }
     | { type: 'LISTEN' }
-    | { type: 'MAXSPEECH' }
-    | { type: 'WAIT' }
     | { type: 'SPEAK', value: string };
 
 

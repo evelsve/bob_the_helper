@@ -11,6 +11,11 @@ import { inspect } from "@xstate/inspect";
 import { dmMachine1 } from "./dmPositive";
 import { dmMachine2 } from "./dmNegative";
 
+
+
+
+// NOTE: We created separate grammars for the machines to 
+// find answers in the most efficient way possible
 export const grammar: { [index: string]: {approval?:  boolean } } = 
         {  "of course": { approval: true },
         "yes of course": { approval: true },
@@ -28,8 +33,36 @@ export const grammar: { [index: string]: {approval?:  boolean } } =
 
         }
 
+export const url_grammar: { [index: string]: {url:  string } } = 
+        {  "rock": { url: 'https://www.youtube.com/watch?v=A0QkGThnKNQ' },
+        "metal": { url: 'https://www.youtube.com/watch?v=xnKhsTXoKCI&list=PLhQCJTkrHOwSX8LUnIMgaTq3chP1tiTut' },
+        "punk": { url: 'https://www.youtube.com/watch?v=xPxsS_-LTe0&list=PLvP_6uwiamDS23WxoCfqY4LBOXF_yF1l9' },
+        "rap": { url: 'https://www.youtube.com/watch?v=5qm8PH4xAss&list=PLvuMfxvpAQrkzez9insKS8cGPU74sK1Ss' },
+        "lo-fi": { url: 'https://www.youtube.com/watch?v=5qap5aO4i9A'},
+        "house": { url: 'https://www.youtube.com/watch?v=cna6C24AJkU' },
+        "techno": { url: 'https://www.youtube.com/watch?v=bC9_OKu6nBQ' },
+        "country": { url: 'https://www.youtube.com/watch?v=kI24NNjz2j8' }
+        // ...          
+}
 
-window.open("https://cors-anywhere.herokuapp.com/corsdemo")
+
+export const finished: { [index: string]: {finished?:  boolean } } = 
+        {  "finished": { finished: true },
+           "done": { finished: true },
+           "I've done the task": { finished: true },
+           "I'm finished": { finished: true }
+           // ...          
+}
+
+export const bye: { [index: string]: {bye?:  boolean } } = 
+        {  "quit": { bye: true },
+           "turn off": { bye: true },
+           "bye": { bye: true },
+           "goodbye": { bye: true }
+           // ...          
+}
+
+// window.open("https://cors-anywhere.herokuapp.com/corsdemo")
 // window.open("https://statecharts.io/inspect")
 
 inspect({
@@ -37,6 +70,8 @@ inspect({
     iframe: false
 });
 
+
+// NOTE: created as much universal functions as possible
 
 export function say(text: string): Action<SDSContext, SDSEvent> {
     return send((_context: SDSContext) => ({ type: "SPEAK", value: text }))
@@ -74,8 +109,8 @@ export function promptHelpBye(prompt: string, idled: string): MachineConfig<SDSC
                 on: { ENDSPEECH: [idled,"#root.init.help"] }
             },
             goodbye:{
-                entry: say("Happy to help out. Goodbye."),
-                on: { ENDSPEECH: [idled,"#root.init.idle" ] }
+                entry: say(""),
+                on: { ENDSPEECH: [idled,"#root.init.goodbye" ] }
             }
     }}
 )}
@@ -119,6 +154,7 @@ export function Conditional(cond1: string, target1: string, cond2: string, targe
                             {cond: (context) => context.option === cond1, target: target1},
                             {cond: (context) => context.option === cond2, target: target2},
                             {cond: (context) => context.option === 'help', target: [idles,"#root.init.help"]},
+                            {cond: (context) => context.option === 'bye', target: [idles,"#root.init.goodbye"]},
                             { target: elses }] 
                         
                     },
@@ -156,20 +192,6 @@ const machine = Machine<SDSContext, any, SDSEvent>({
                     ...promptAndAsk("Good morning. How are you?")
                 },
                 query: {...Queries("distributor",'welcome')},
-                // query: {
-                //     invoke: {
-                //         id: 'rasa',
-                //         src: (context, event) => nluRequest(context.option),
-                //         onDone: {
-                //             actions: [assign((context, event) => { return  {option: event.data.intent.name} }), 
-                //             (context: SDSContext, event: any) => console.log(event.data)],
-                //             target: "distributor"
-                //         },
-                //         onError: {
-                //             target: 'welcome',
-                //             actions: (context, event) => console.log(event.data)}
-                //     }
-                // },
                 // ...
                 distributor: {
                     initial: "prompt",
@@ -178,8 +200,9 @@ const machine = Machine<SDSContext, any, SDSEvent>({
                             {cond: (context) => context.option === 'positive', target: ["#root.dm1.positive", "idle"]},
                             {cond: (context) => context.option === 'negative', target: ["#root.dm2.negative", "idle"]},
                             {cond: (context) => context.option === 'todo', target: ["#root.dm1.create_do", "idle"]},
+                            // REMINDER: delete answer after retraining
                             {cond: (context) => context.option === 'ideas', target: ["#root.dm1.create_ideas", "idle"]},
-                            {cond: (context) => context.option === 'answer', target: "answer"},
+                            {cond: (context) => context.option === 'answer', target: "bob"}, 
                             {cond: (context) => context.option === 'bob', target: "bob"},
                             {cond: (context) => context.option === 'neutral', target: "neutral"},
                             {cond: (context) => context.option === 'music', target: ["#root.dm2.negative.choose_music", "idle"]},
@@ -188,30 +211,19 @@ const machine = Machine<SDSContext, any, SDSEvent>({
 
                             {cond: (context) => context.option === 'help', target: "help"},
 
-                            {target: ".nomatch"} ]
+                            {target: "goodbye"} ]
                         },
                     states: {
                         prompt: {
                             entry: say('Ok.')
-                            // send((context) => ({type: "SPEAK", value: `Ok.`})),
-                        },
-                        nomatch:{
-                            entry: say("This function has not been developed"),
-                            on: {ENDSPEECH: "#root.init.help"}
                         }
                     }
                 },
                 // ...
-                answer: {
-                    on: {
-                        RECOGNISED: {
-                            target: "query",
-                            actions: assign((context) => { return { option: context.recResult } }),
-                        }},
-                    ...promptAndAsk("I am good, thank you. Tell me what you'd like to do.")
-                },
-                // ...
                 bob: {
+                // NOTE:
+                // This part could be developed more, into a seperate machine
+                // where the user could try out the limits of adaptivity of this DS
                     on: {
                         RECOGNISED: {
                             target: "query",
@@ -221,16 +233,16 @@ const machine = Machine<SDSContext, any, SDSEvent>({
                 },
                 // ...
                 neutral: {
+                // NOTE: 
+                // We are aware that this is not efficient.
+                // We tried this part to see how the machines interact between themselves. 
+                // For educational purposes only.
                     on: {
                         RECOGNISED: {
-                            // NOTE: 
-                            // We are aware that this is not efficient.
-                            // We tried this part to see how the machines interact between themselves. 
-                            // For educational purposes only.
-                            target: "q",
+                            target: "#root.dm2.negative.choose_music",
                             actions: assign((context) => { return { option: context.recResult } }),
                         }},
-                    ...promptAndAsk("I am good, thank you.")
+                    ...promptAndAsk("You seem lost. What about listening to some music?")
                 },
                 // ...
                 help: {
@@ -240,9 +252,11 @@ const machine = Machine<SDSContext, any, SDSEvent>({
                             target: "bob"},
 
                             {cond: (context) => grammar[context.recResult] !== undefined && grammar[context.recResult].approval === false,
-                            target: ".goodbye"},]  
+                            target: "goodbye"},
+
+                            {target: "bob"}]  
                     },
-                ...promptHelpBye("I feel lost. Let's start over?", "#root.init")
+                ...promptAndAsk("I feel lost. Would you like to start over?")
                 },
             //     // ...
                 goodbye: {...Endings("Happy to help out. See you later.","#root.init")}

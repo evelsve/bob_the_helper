@@ -1,45 +1,35 @@
 import { MachineConfig, send, assign } from "xstate";
-import { Queries, Conditional, promptAndAsk, Endings, promptHelpBye, say, grammar } from "./index";
+import { Queries, bye, Conditional, promptAndAsk, finished, promptHelpBye, say, grammar } from "./index";
 
 
 
-export const url_grammar: { [index: string]: {url:  string } } = 
-         {  "rock": { url: 'https://www.youtube.com/watch?v=A0QkGThnKNQ' },
-            "metal": { url: 'https://www.youtube.com/watch?v=xnKhsTXoKCI&list=PLhQCJTkrHOwSX8LUnIMgaTq3chP1tiTut' },
-            "punk": { url: 'https://www.youtube.com/watch?v=xPxsS_-LTe0&list=PLvP_6uwiamDS23WxoCfqY4LBOXF_yF1l9' },
-            "rap": { url: 'https://www.youtube.com/watch?v=5qm8PH4xAss&list=PLvuMfxvpAQrkzez9insKS8cGPU74sK1Ss' },
-            "lo-fi": { url: 'https://www.youtube.com/watch?v=5qap5aO4i9A'},
-            "house": { url: 'https://www.youtube.com/watch?v=cna6C24AJkU' },
-            "techno": { url: 'https://www.youtube.com/watch?v=bC9_OKu6nBQ' },
-            "country": { url: 'https://www.youtube.com/watch?v=kI24NNjz2j8' }
-            // ...          
-}
 
-const help_commands = ["help", "I don't know", "help me", "I need help", "what does this mean", "wait what", "what do you mean"]
 
-export function Prompt_Nomatch_Timeout(prompt: string, no_match:string, timeout=5000): MachineConfig<SDSContext, any, SDSEvent> {
-    return ({
-	initial: 'prompt',
-	states: {
-            prompt: {
-                entry: say(prompt),
-                on: { ENDSPEECH: 'ask' }
-            },
-            ask: {
-                entry: [send('LISTEN'), send('MAXSPEECH', {delay: timeout , id: 'timeout'})]
-            },
-            nomatch: {
-                entry: say(no_match),
-                on: { ENDSPEECH: "prompt" }
-            }}})
-}
 
-export const gram: { [index: string]: {finished?:  boolean } } = 
-         {  "finished": { finished: true },
-            "done": { finished: true },
-            "I've done the task": { finished: true }
-            // ...          
-}
+// export function promptHelpBye(prompt: string, idled: string): MachineConfig<SDSContext, any, SDSEvent> {
+//     return ({
+//         initial: 'prompt',
+//         states: {
+//             prompt: {
+//                 entry: say(prompt),
+//                 on: { ENDSPEECH: 'ask' }
+//             },
+//             ask: {entry: send('LISTEN')
+//             },
+//             help: {
+//                 entry: say("We may be miscommunicating."),
+//                 on: { ENDSPEECH: [idled,"#root.init.help"] }
+//             },
+//             goodbye:{
+//                 entry: say(""),
+//                 on: { ENDSPEECH: [idled,"#root.init.goodbye" ] }
+//             }
+//     }}
+// )}
+
+
+
+
 
 let num = 0
 
@@ -67,6 +57,11 @@ export const dmMachine1: MachineConfig<SDSContext, any, SDSEvent> = ({
                             {cond: (context) => grammar[context.recResult] !== undefined && grammar[context.recResult].approval === false,
                             target: "#root.dm1.if_ideas"},
 
+                            {cond: (context) => bye[context.recResult] !== undefined && bye[context.recResult].bye === false,
+                            target: "#root.dm1.if_ideas"},
+
+                            // {cond: (context) => context.option === 'help', target: ".help"},
+                            // {cond: (context) => context.option === 'bye', target: ".goodbye"},
                             {target:'#root.dm1.others'}
                             ]
                         },
@@ -86,25 +81,25 @@ export const dmMachine1: MachineConfig<SDSContext, any, SDSEvent> = ({
             // ....
             query1: {...Queries('conditional1',"#root.init.help")},
             // ....
-            conditional1: {...Conditional('agree', "create_do", 'disagree', "#root.dm1.if_ideas", "#root.dm1.others", '#root.dm2.idle', `Ok.`)},
+            conditional1: {...Conditional('agree', "create_do", 'disagree', "#root.dm1.if_ideas", "#root.dm1.others", '#root.dm1.idle', `Ok.`)},
             // ....
             query3: {...Queries("#root.init.distributor", "#root.init.help")},
             //...
             create_do:{
                 initial: "prompt",
                 on: {
-                    RECOGNISED: {
-                        actions: assign((context) => { return { task: context.recResult } }),
+                    RECOGNISED: 
+                        {actions: assign((context) => { return { task: context.recResult } }),
                         target: "to_do"}
                     },
-                    ...promptAndAsk("Tell me the things you have to accomplish.")
+                    ...promptHelpBye("Tell me the things you have to accomplish.", '#root.dm1.idle')
             },
             // ...
             to_do: {
                 initial: "prompt",
                 states: {
                     prompt: {
-                        entry: send((context) => ({delay:12000,
+                        entry: send((context) => ({
                             type: "SPEAK",
                             value:`Now go and complete the following tasks: ${context.task}` })),
                             on: { ENDSPEECH: '#root.dm1.wait'},  
@@ -113,11 +108,14 @@ export const dmMachine1: MachineConfig<SDSContext, any, SDSEvent> = ({
             },
             // ...
             if_ideas: {
+                // Note to self: help/bye implemented (uses conditional)
                 on: {
-                    RECOGNISED: {
-                        target: '#root.dm1.query2',
-                        actions: assign((context) => { return { option: context.recResult } }),
-                    }},
+                    RECOGNISED: [
+                        {target: '#root.dm1.query2',
+                        actions: assign((context) => { return { option: context.recResult } })},
+                        
+                        {target:'#root.dm1.others'}
+                    ]},
                 ...promptAndAsk("Then how about working on your ideas?")
             },
             // ....
@@ -152,10 +150,10 @@ export const dmMachine1: MachineConfig<SDSContext, any, SDSEvent> = ({
                 initial: "prompt",
                 on: {
                     RECOGNISED: [
-                        {cond: (context) => gram[context.recResult] !== undefined && gram[context.recResult].finished === true,
+                        {cond: (context) => finished[context.recResult] !== undefined && finished[context.recResult].finished === true,
                         target: "done"},
 
-                        {cond: (context) => gram[context.recResult] !== undefined && gram[context.recResult].finished === false,
+                        {cond: (context) => finished[context.recResult] !== undefined && finished[context.recResult].finished === false,
                         target: "wait"},
                         {target: 'wait'}]  
                 },
@@ -166,8 +164,8 @@ export const dmMachine1: MachineConfig<SDSContext, any, SDSEvent> = ({
                 initial: "prompt",
                     states: {
                         prompt: {
-                            entry: say("Good job."),
-                            on: { ENDSPEECH: {target: '#root.init.goodbye'}},
+                            entry: say("Good job. Time to relax."),
+                            on: { ENDSPEECH: {target: '#root.dm1.positive.quest2'}},
                         }
                     }
             },
@@ -177,7 +175,7 @@ export const dmMachine1: MachineConfig<SDSContext, any, SDSEvent> = ({
                 // on: {ENDSPEECH: '#root.goodbbye'},
                     states: {
                         prompt: {
-                            entry: say("mmm, you said something strange"),
+                            entry: say("Umm, you said something strange"),
                             on: { ENDSPEECH: '#root.dm1.positive.quest2'},
                         }
                     }

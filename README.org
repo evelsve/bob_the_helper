@@ -1,1 +1,21 @@
-This app is used as a personal helper.
+"Bob the Helper" app was developed by Eva Elzbieta Sventickaite and Kris Farrugia.
+Bob the Helper was inspired by Bob the Builder. The app is intended for children (7-10).
+
+Intention was to make it as intuitive as possible from interactional point of view. 
+Also, we wish to improve it even after the DS course, as a small continuous project.
+
+
+
+\\
+
+Instructions:
+Open the app, it will prompt you.
+
+At most points in ROOT and dm1 you can quit the app by saying "quit", "turn off" or something similar. 
+Same goes for "help".
+
+
+
+
+
+

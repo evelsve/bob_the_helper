@@ -83,7 +83,7 @@ export const dmMachine2: MachineConfig<SDSContext, any, SDSEvent> = ({
                     },
                     states: {
                         prompt: {
-                            entry: say("Great, let's dance our troubles away! Which genre would you like to listen to?"),
+                            entry: say("Which genre would you like to listen to?"),
                             on: {ENDSPEECH : "ask"}
                         },
                         ask: {
@@ -99,7 +99,7 @@ export const dmMachine2: MachineConfig<SDSContext, any, SDSEvent> = ({
                     initial: 'prompt',
                     states: {
                         prompt: {
-                            entry: say('Loading music for you! Dance your troubles away. I hope you feel better homie.'),
+                            entry: say('Music is in the new tab. Dance, dance, dance!'),
                             on: { ENDSPEECH: 'play'}
                         },
                         play: {
@@ -149,7 +149,7 @@ export const dmMachine2: MachineConfig<SDSContext, any, SDSEvent> = ({
                     },
                     states: {
                         prompt: {
-                            entry: say("Nice! You choose to play an arcade, shooting or racing game!"),
+                            entry: say("You can choose to play an arcade, shooting or racing game!"),
                                 on: {ENDSPEECH : "ask"}
                             },
                             ask: {
@@ -166,7 +166,7 @@ export const dmMachine2: MachineConfig<SDSContext, any, SDSEvent> = ({
                     initial: 'prompt',
                     states: {
                         prompt: {
-                            entry: say('Loading game for you! I hope you feel better my G.'),
+                            entry: say('The game is in a new tab'),
                             on: { ENDSPEECH: 'play'}
                         },
                         play: {
@@ -192,7 +192,7 @@ export const dmMachine2: MachineConfig<SDSContext, any, SDSEvent> = ({
                     },
                 states: {
                     prompt: {
-                        entry: say("Then would you like some random entertainment?"),
+                        entry: say("Ok, would you like some random entertainment?"),
                             on: {ENDSPEECH : "ask"}
                         },
                         ask: {
@@ -208,7 +208,7 @@ export const dmMachine2: MachineConfig<SDSContext, any, SDSEvent> = ({
                     initial: 'prompt',
                     states: {
                         prompt: {
-                            entry: say('Loading entertainment for you! I hope you feel better my G'),
+                            entry: say('The entertainement is in a new tab'),
                             on: { ENDSPEECH: 'play'}
                         },
                         play: {
@@ -223,7 +223,7 @@ export const dmMachine2: MachineConfig<SDSContext, any, SDSEvent> = ({
                     initial: 'prompt',
                     states: {
                         prompt: {
-                            entry: say('Okay! I hope you find another way to feel better!'),
+                            entry: say('Understood. Let me know if you need anything'),
                             on: { ENDSPEECH: '#root.dm2.idle'}
                         },
                 }
