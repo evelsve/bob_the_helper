@@ -5,14 +5,11 @@ import { MachineConfig, Machine, send, Action, assign, State } from "xstate";
 import { useMachine, asEffect } from "@xstate/react";
 import { useSpeechSynthesis, useSpeechRecognition } from 'react-speech-kit';
 import { inspect } from "@xstate/inspect";
-
-// auto-open this asshole: https://cors-anywhere.herokuapp.com/corsdemo
-
 import { dmMachine1 } from "./dmPositive";
 import { dmMachine2 } from "./dmNegative";
 
 
-
+// -------------------------
 
 // NOTE: We created separate grammars for the machines to 
 // find answers in the most efficient way possible
@@ -62,14 +59,18 @@ export const bye: { [index: string]: {bye?:  boolean } } =
            // ...          
 }
 
+
+// -------------------------
+
+// uncomment to auto-open this:
 // window.open("https://cors-anywhere.herokuapp.com/corsdemo")
-// window.open("https://statecharts.io/inspect")
 
 inspect({
     url: "https://statecharts.io/inspect",
     iframe: false
 });
 
+// -------------------------
 
 // NOTE: created as much universal functions as possible
 
@@ -171,6 +172,8 @@ const saySnippet: Action<SDSContext, SDSEvent> = send((context: SDSContext) => (
     type: "SPEAK", value: `${context.snippet}`
 }))
 
+// -------------------------
+
 
 const machine = Machine<SDSContext, any, SDSEvent>({
     id: 'root',
@@ -200,10 +203,8 @@ const machine = Machine<SDSContext, any, SDSEvent>({
                             {cond: (context) => context.option === 'positive', target: ["#root.dm1.positive", "idle"]},
                             {cond: (context) => context.option === 'negative', target: ["#root.dm2.negative", "idle"]},
                             {cond: (context) => context.option === 'todo', target: ["#root.dm1.create_do", "idle"]},
-                            // REMINDER: delete answer after retraining
-                            {cond: (context) => context.option === 'ideas', target: ["#root.dm1.create_ideas", "idle"]},
-                            {cond: (context) => context.option === 'answer', target: "bob"}, 
-                            {cond: (context) => context.option === 'bob', target: "bob"},
+                            {cond: (context) => context.option === 'ideas', target: ["#root.dm1.create_ideas", "idle"]}, 
+                            {cond: (context) => context.option === 'bob' || context.option === 'answer', target: "bob"},
                             {cond: (context) => context.option === 'neutral', target: "neutral"},
                             {cond: (context) => context.option === 'music', target: ["#root.dm2.negative.choose_music", "idle"]},
                             {cond: (context) => context.option === 'games', target: ["#root.dm2.negative.choose_game", "idle"]},
@@ -258,7 +259,7 @@ const machine = Machine<SDSContext, any, SDSEvent>({
                     },
                 ...promptAndAsk("I feel lost. Would you like to start over?")
                 },
-            //     // ...
+                // ...
                 goodbye: {...Endings("Happy to help out. See you later.","#root.init")}
             },
         },            

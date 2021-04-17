@@ -7,7 +7,7 @@ interface SDSContext {
     nluData: any;
     ttsAgenda: string;
     approval:  boolean,
-    // intentResult: any;
+// ----
     query: string,
     snippet: string,
     option: string,
