@@ -31,8 +31,9 @@ the app is somehow crashing, an issue which will be fixed.
 
 (iii) Neutral: We have only implemented a testing option. This will be coded in the foreseeable future.
 
-- The options mentioned above can be accessed directly after Bob's first prompt. However, for anyone using Bob 
-for the first time, we suggest you to respond to the implemented prompts accordingly.
+
+The options mentioned above can be accessed directly after Bob's first prompt. However, for anyone using Bob 
+for the first time, we suggest you respond to the implemented prompts accordingly.
 
 
 Rules:
@@ -60,5 +61,3 @@ EVA:
 
 We wish to improve this app even after the DS course, as a small continuous project,
 so we welcome all the possible feedback.
-
-
